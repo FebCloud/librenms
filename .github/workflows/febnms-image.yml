@@ -1,0 +1,32 @@
+name: FebNMS image
+
+on:
+  workflow_dispatch:
+    inputs:
+      librenms_version:
+        description: Official LibreNMS image tag to build on
+        required: true
+        default: 26.11.0
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: docker/febnms
+          build-args: LIBRENMS_VERSION=${{ inputs.librenms_version }}
+          push: true
+          tags: |
+            ghcr.io/febcloud/febnms-librenms:${{ inputs.librenms_version }}
+            ghcr.io/febcloud/febnms-librenms:latest

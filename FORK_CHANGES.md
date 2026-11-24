@@ -56,14 +56,14 @@ transport on every segment of an operation. The FebNMS app uses them to
 register its push webhook on a server without any manual configuration.
 Documented in [`doc/API/Alerts.md`](doc/API/Alerts.md).
 
-## Reproducible container image
+## Container image for FebNMS users
 
-[`deploy/custom-image/Dockerfile`](deploy/custom-image/Dockerfile) layers the
-forked API and discovery code on the official LibreNMS image pinned by digest.
-It is used for the web, dispatcher, syslog, and SNMP trap containers while the
-database, Redis, shared `/data` volume, and published ports remain external and
-unchanged. Build and deployment details are in
-[`deploy/custom-image/README.md`](deploy/custom-image/README.md).
+[`docker/febnms/`](docker/febnms/) builds on the official `librenms/librenms`
+image and applies the upstream pull requests the FebNMS app uses that are not
+merged yet: #20760 (device live metrics, with a fix for the 26.11 RRD backend)
+and #20356 (port speed override). The `FebNMS image` workflow publishes it as
+`ghcr.io/febcloud/febnms-librenms:<LibreNMS version>`. Users swap the image
+name in the official compose file; see [`docker/febnms/README.md`](docker/febnms/README.md).
 
 ## Verification
 

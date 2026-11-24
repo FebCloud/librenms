@@ -1,0 +1,29 @@
+diff --git a/app/Services/CurrentRrdMetricService.php b/app/Services/CurrentRrdMetricService.php
+index 32e559d..ddf45fd 100644
+--- a/app/Services/CurrentRrdMetricService.php
++++ b/app/Services/CurrentRrdMetricService.php
+@@ -17,7 +17,7 @@ class CurrentRrdMetricService
+ 
+     public function filename(string $hostname, string|array $rrdName): string
+     {
+-        return $this->rrd->name($hostname, $rrdName);
++        return (string) $this->rrd->name($hostname, $rrdName);
+     }
+ 
+     public function latestAverage(string $filename, string $dataset = 'value', ?int $now = null): ?RrdSample
+@@ -32,13 +32,8 @@ class CurrentRrdMetricService
+         $step = (int) LibrenmsConfig::get('rrd.step', 300);
+         $maxAge = max($step * 3, 900);
+         $start = $now - max($step * 6, 1800);
+-        $command = implode(' ', $this->rrd->buildCommand('fetch', $filename, [
+-            'AVERAGE',
+-            '--start',
+-            (string) $start,
+-            '--end',
+-            (string) $now,
+-        ]));
++        // the rrdtool process runs in the rrd directory and forwards to rrdcached when it is configured
++        $command = implode(' ', ['fetch', $filename, 'AVERAGE', '--start', (string) $start, '--end', (string) $now]);
+ 
+         try {
+             $output = $this->rrdProcess->run($command);
