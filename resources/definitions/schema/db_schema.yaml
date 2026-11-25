@@ -747,6 +747,17 @@ device_group_device:
   Constraints:
     device_group_device_device_group_id_foreign: { name: device_group_device_device_group_id_foreign, foreign_key: device_group_id, table: device_groups, key: id, extra: 'ON DELETE CASCADE' }
     device_group_device_device_id_foreign: { name: device_group_device_device_id_foreign, foreign_key: device_id, table: devices, key: device_id, extra: 'ON DELETE CASCADE' }
+device_metric_baselines:
+  Columns:
+    - { Field: device_id, Type: 'int unsigned', 'Null': false, Extra: '' }
+    - { Field: cpu_perc, Type: double, 'Null': true, Extra: '' }
+    - { Field: mem_perc, Type: double, 'Null': true, Extra: '' }
+    - { Field: days, Type: 'tinyint unsigned', 'Null': false, Extra: '', Default: '0' }
+    - { Field: valid_from, Type: 'int unsigned', 'Null': false, Extra: '' }
+    - { Field: valid_until, Type: 'int unsigned', 'Null': false, Extra: '' }
+  Indexes:
+    PRIMARY: { Name: PRIMARY, Columns: [device_id], Unique: true, Type: BTREE }
+    device_metric_baselines_valid_until_index: { Name: device_metric_baselines_valid_until_index, Columns: [valid_until], Unique: false, Type: BTREE }
 device_outages:
   Columns:
     - { Field: id, Type: 'bigint unsigned', 'Null': false, Extra: auto_increment }

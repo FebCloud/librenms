@@ -72,6 +72,26 @@
             "default": "%sensors.sensor_current != \"1\" && %sensors.sensor_current != \"5\" && %sensors.sensor_type REGEXP \"^cisco.*State$\" && %sensors.sensor_alert = \"1\"",
             "type": "text"
         },
+        "alert.macros.rule.device_cpu_baseline": {
+            "default": "COALESCE((SELECT b.cpu_perc FROM device_metric_baselines AS b WHERE b.device_id = %devices.device_id AND b.valid_until >= UNIX_TIMESTAMP()), 0)",
+            "type": "text"
+        },
+        "alert.macros.rule.device_cpu_rise": {
+            "default": "COALESCE((SELECT (SELECT AVG(p.processor_usage) FROM processors AS p WHERE p.device_id = b.device_id) - b.cpu_perc FROM device_metric_baselines AS b WHERE b.device_id = %devices.device_id AND b.valid_until >= UNIX_TIMESTAMP() AND b.cpu_perc IS NOT NULL), 0)",
+            "type": "text"
+        },
+        "alert.macros.rule.device_mem_baseline": {
+            "default": "COALESCE((SELECT b.mem_perc FROM device_metric_baselines AS b WHERE b.device_id = %devices.device_id AND b.valid_until >= UNIX_TIMESTAMP()), 0)",
+            "type": "text"
+        },
+        "alert.macros.rule.device_mem_perc": {
+            "default": "COALESCE((SELECT AVG(m.mempool_perc) FROM mempools AS m WHERE m.device_id = %devices.device_id AND m.mempool_class = \"system\"), 0)",
+            "type": "text"
+        },
+        "alert.macros.rule.device_mem_rise": {
+            "default": "COALESCE((SELECT (SELECT AVG(m.mempool_perc) FROM mempools AS m WHERE m.device_id = b.device_id AND m.mempool_class = \"system\") - b.mem_perc FROM device_metric_baselines AS b WHERE b.device_id = %devices.device_id AND b.valid_until >= UNIX_TIMESTAMP() AND b.mem_perc IS NOT NULL), 0)",
+            "type": "text"
+        },
         "alert.macros.rule.device_cpu_avg_perc": {
             "default": "COALESCE((SELECT AVG(p.processor_usage) FROM processors AS p WHERE p.device_id = %devices.device_id), 0)",
             "type": "text"

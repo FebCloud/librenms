@@ -359,6 +359,13 @@ return [
         'error' => 'Error processing Mac OUI:',
         'vendor_update' => 'Adding OUI :oui for :vendor',
     ],
+    'maintenance:device-metric-baselines' => [
+        'description' => 'Refresh each device\'s usual CPU and memory usage for the current hour (used by the device baseline alert macros)',
+        'options' => [
+            'device' => 'Only this hostname or device id',
+        ],
+        'saved' => 'Saved :count device baselines',
+    ],
     'maintenance:port-traffic-baselines' => [
         'description' => 'Refresh each port\'s usual traffic for the current hour (used by the port baseline alert macros)',
         'options' => [

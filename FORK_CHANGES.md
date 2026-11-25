@@ -72,6 +72,19 @@ so a stopped scheduler makes the macros read 0 instead of a stale baseline.
 FebNMS app's AI rule assistant only offers these macros on servers that have
 them.
 
+## Device CPU and memory baselines
+
+`lnms maintenance:device-metric-baselines` runs hourly from the scheduler and
+stores, per device, the median of the device's average CPU usage (mean of its
+processors) and system memory usage in the same hour over the past 7 days
+(read from the 30-minute RRA of the processor and memory pool RRDs) in
+`device_metric_baselines`. The alert macros `device_cpu_rise` /
+`device_mem_rise` (percentage points above usual), `device_cpu_baseline` /
+`device_mem_baseline` and `device_mem_perc` (current system memory usage)
+read it, so a rule can alert on a sudden rise in CPU or memory usage without
+false alarms from jobs that run at the same time every day. Rows expire like
+the port baselines. `febnms_features` adds `device_metric_baseline`.
+
 ## Container image for FebNMS users
 
 [`docker/febnms/`](docker/febnms/) builds on the official `librenms/librenms`

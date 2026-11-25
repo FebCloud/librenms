@@ -116,6 +116,40 @@ Description: Returns the average CPU usage percentage across all processors on t
 
 Source: `COALESCE((SELECT AVG(p.processor_usage) FROM processors AS p WHERE p.device_id = %devices.device_id), 0)`
 
+#### Device memory percentage (Decimal)
+
+Entity: `macros.device_mem_perc`
+
+Description: the average usage, in percent, of the device's system memory
+pools. Returns `0` when no memory data is available.
+
+Source: `COALESCE((SELECT AVG(m.mempool_perc) FROM mempools AS m WHERE m.device_id = %devices.device_id AND m.mempool_class = "system"), 0)`
+
+#### Device CPU / memory above its usual level (Decimal)
+
+Entity: `macros.device_cpu_rise`, `macros.device_mem_rise`
+
+Description: how many percentage points the device's current CPU usage
+(`device_cpu_avg_perc`) / memory usage (`device_mem_perc`) is above its usual
+usage for this hour: the median of the device's average usage in the same
+hour over the past 7 days. `30` means 30 points higher than usual (for
+example 75% now against 45% usually); the value is negative when usage is
+below usual and `0` while no baseline exists. Because each hour is compared
+with the same hour on earlier days, a job that runs at the same time every
+day does not trigger it.
+
+Baselines are refreshed hourly by `lnms maintenance:device-metric-baselines`
+(run by the scheduler) from the processor and memory pool RRD files and need
+at least 3 days of history. Example: `macros.device_cpu_rise >= 30 AND
+macros.device_cpu_avg_perc >= 70`.
+
+#### Device usual CPU / memory (Decimal)
+
+Entity: `macros.device_cpu_baseline`, `macros.device_mem_baseline`
+
+Description: the device's usual CPU / memory usage for this hour in percent
+(see above), or `0` while no baseline exists.
+
 #### Device component down [JunOS]
 
 Entity: `macros.device_component_down_junos`

@@ -4335,7 +4335,7 @@ function server_info()
         'rrdtool_ver' => $version->rrdtool(),
         'netsnmp_ver' => $version->netSnmp(),
         // FebNMS additions clients may rely on (absent on upstream LibreNMS)
-        'febnms_features' => ['port_traffic_baseline'],
+        'febnms_features' => ['port_traffic_baseline', 'device_metric_baseline'],
     ];
 
     return api_success([

@@ -3,6 +3,7 @@
 use App\Console\Commands\MaintenanceCachePeeringdb;
 use App\Console\Commands\MaintenanceCleanupNetworks;
 use App\Console\Commands\MaintenanceCleanupSyslog;
+use App\Console\Commands\MaintenanceDeviceMetricBaselines;
 use App\Console\Commands\MaintenanceDiscoverSslCertificates;
 use App\Console\Commands\MaintenanceFetchOuis;
 use App\Console\Commands\MaintenanceFetchRSS;
@@ -83,6 +84,15 @@ Schedule::command(MaintenancePortTrafficBaselines::class)
     ->runInBackground()
     ->appendOutputTo($maintenance_log_file)
     ->onFailure(fn () => Eventlog::log('The scheduled command maintenance:port-traffic-baselines failed to run. Check the maintenance.log for details.', null, 'maintenance', Severity::Error));
+
+// FebNMS: usual CPU and memory usage per device for the hour, read by the device_*_rise alert macros
+Schedule::command(MaintenanceDeviceMetricBaselines::class)
+    ->hourlyAt(2)
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo($maintenance_log_file)
+    ->onFailure(fn () => Eventlog::log('The scheduled command maintenance:device-metric-baselines failed to run. Check the maintenance.log for details.', null, 'maintenance', Severity::Error));
 
 Schedule::command(MaintenanceCleanupSyslog::class)
     ->hourlyAt(17)
