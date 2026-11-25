@@ -36,7 +36,10 @@ class PortTrafficBaselineService
     public function forPort(string $hostname, int $portId, int $slotStart): array
     {
         $filename = (string) $this->rrd->name($hostname, $this->rrd->portName($portId));
-        $command = implode(' ', $this->rrd->buildCommand('fetch', $filename, [
+        // The rrdtool process runs in the rrd directory and forwards to rrdcached when configured.
+        $command = implode(' ', [
+            'fetch',
+            $filename,
             'AVERAGE',
             // The 30 minute RRA keeps 30 days; a coarser step would blur the hour.
             '--resolution',
@@ -45,7 +48,7 @@ class PortTrafficBaselineService
             (string) ($slotStart - self::DAYS * 86400),
             '--end',
             (string) ($slotStart - 86400 + self::SLOT),
-        ]));
+        ]);
 
         try {
             $output = $this->rrdProcess->run($command);
