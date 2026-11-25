@@ -360,7 +360,7 @@ function service_diagnostics(string $type, string $command): array
             } else {
                 $curl[] = '-H';
                 $curl[] = "Host: $vhost";
-                $curl[] = "http://" . (str_contains($address, ':') ? "[$address]" : $address) . ":$port$path";
+                $curl[] = 'http://' . (str_contains($address, ':') ? "[$address]" : $address) . ":$port$path";
             }
         } else {
             $curl[] = "$scheme://$vhost:$port$path";
