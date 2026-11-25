@@ -2067,6 +2067,17 @@ port_security:
     PRIMARY: { Name: PRIMARY, Columns: [id], Unique: true, Type: BTREE }
     port_security_device_id_index: { Name: port_security_device_id_index, Columns: [device_id], Unique: false, Type: BTREE }
     port_security_port_id_unique: { Name: port_security_port_id_unique, Columns: [port_id], Unique: true, Type: BTREE }
+port_traffic_baselines:
+  Columns:
+    - { Field: port_id, Type: 'int unsigned', 'Null': false, Extra: '' }
+    - { Field: in_rate, Type: double, 'Null': true, Extra: '' }
+    - { Field: out_rate, Type: double, 'Null': true, Extra: '' }
+    - { Field: days, Type: 'tinyint unsigned', 'Null': false, Extra: '', Default: '0' }
+    - { Field: valid_from, Type: 'int unsigned', 'Null': false, Extra: '' }
+    - { Field: valid_until, Type: 'int unsigned', 'Null': false, Extra: '' }
+  Indexes:
+    PRIMARY: { Name: PRIMARY, Columns: [port_id], Unique: true, Type: BTREE }
+    port_traffic_baselines_valid_until_index: { Name: port_traffic_baselines_valid_until_index, Columns: [valid_until], Unique: false, Type: BTREE }
 printer_supplies:
   Columns:
     - { Field: supply_id, Type: 'int unsigned', 'Null': false, Extra: auto_increment }

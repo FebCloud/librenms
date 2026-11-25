@@ -132,6 +132,22 @@
             "default": "(%ports.deleted = 0 && %ports.ignore = 0 && %ports.disabled = 0)",
             "type": "text"
         },
+        "alert.macros.rule.port_in_baseline": {
+            "default": "COALESCE((SELECT b.in_rate FROM port_traffic_baselines AS b WHERE b.port_id = %ports.port_id AND b.valid_until >= UNIX_TIMESTAMP()), 0)",
+            "type": "text"
+        },
+        "alert.macros.rule.port_in_drop_perc": {
+            "default": "COALESCE((SELECT (1 - %ports.ifInOctets_rate / b.in_rate) * 100 FROM port_traffic_baselines AS b WHERE b.port_id = %ports.port_id AND b.valid_until >= UNIX_TIMESTAMP() AND b.in_rate > 0), 0)",
+            "type": "text"
+        },
+        "alert.macros.rule.port_out_baseline": {
+            "default": "COALESCE((SELECT b.out_rate FROM port_traffic_baselines AS b WHERE b.port_id = %ports.port_id AND b.valid_until >= UNIX_TIMESTAMP()), 0)",
+            "type": "text"
+        },
+        "alert.macros.rule.port_out_drop_perc": {
+            "default": "COALESCE((SELECT (1 - %ports.ifOutOctets_rate / b.out_rate) * 100 FROM port_traffic_baselines AS b WHERE b.port_id = %ports.port_id AND b.valid_until >= UNIX_TIMESTAMP() AND b.out_rate > 0), 0)",
+            "type": "text"
+        },
         "alert.macros.rule.port_out_error_perc": {
             "default": "((%ports.ifOutErrors_rate) / %ports.ifOutUcastPkts_rate)*100",
             "type": "text"

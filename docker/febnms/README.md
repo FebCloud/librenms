@@ -7,6 +7,7 @@
 | [#20760](https://github.com/librenms/librenms/pull/20760) | 设备秒级实时指标（`/api/v1/devices/{device}/metrics/...`） | 官方已关闭，作为补丁长期维护 |
 | `patches/febnms-rrd-fetch.diff` | 让 #20760 适配 26.11 的 RRD 接口（原版在 26.11 上 summary 和 io-wait 会 500） | 我们自己的修正 |
 | [#20356](https://github.com/librenms/librenms/pull/20356) | 端口速率覆盖 API | 等待官方评审 |
+| `patches/febnms-traffic-baseline.diff` | 端口流量同期基线（每小时由计划任务计算）和告警宏 `port_in/out_drop_perc`、`port_in/out_baseline`，用于“流量比平时骤降”告警；`/api/v0/system` 返回 `febnms_features` | 我们自己的功能，见 FORK_CHANGES.md |
 
 #20355（传感器阈值）和 #20357（服务最后检查时间）目前打不上最新的 LibreNMS，需要先更新这两个 PR。
 

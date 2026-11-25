@@ -235,6 +235,31 @@ Description: it returns the inbound error percentage of the port.
 
 Source: `((ports.ifInErrors_rate / ports.ifInUcastPkts_rate)*100)`
 
+### Port traffic below its usual level (Decimal)
+
+Entity: `macros.port_in_drop_perc`, `macros.port_out_drop_perc`
+
+Description: how far, in percent, the port's current inbound / outbound
+rate is below its usual rate for this hour: the median of the port's average
+rate in the same hour over the past 7 days. `60` means 60% lower than usual;
+the value is negative when traffic is above usual and `0` while no baseline
+exists. Because each hour is compared with the same hour on earlier days, a
+normal daily rise and fall does not trigger it.
+
+Baselines are refreshed hourly by `lnms maintenance:port-traffic-baselines`
+(run by the scheduler) from the port RRD files and need at least 3 days of
+history. Example: `macros.port_in_drop_perc > 60 AND macros.port_in_baseline > 1000000`.
+
+Source: `COALESCE((SELECT (1 - ports.ifInOctets_rate / b.in_rate) * 100 FROM port_traffic_baselines AS b WHERE b.port_id = ports.port_id AND b.valid_until >= UNIX_TIMESTAMP() AND b.in_rate > 0), 0)`
+
+### Port usual traffic (Decimal)
+
+Entity: `macros.port_in_baseline`, `macros.port_out_baseline`
+
+Description: the port's usual inbound / outbound rate for this hour in bytes
+per second (see above), or `0` while no baseline exists. Useful to leave out
+quiet ports.
+
 
 #### Port is up (Boolean)
 
