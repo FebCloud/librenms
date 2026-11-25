@@ -2,8 +2,8 @@
 
 namespace LibreNMS\Tests\Unit;
 
-use LibreNMS\Data\Graphing\GraphSeriesSelection;
-use LibreNMS\Exceptions\RrdGraphException;
+use App\Data\Graphing\GraphSeriesSelection;
+use LibreNMS\Exceptions\InvalidGraphInput;
 use PHPUnit\Framework\TestCase;
 
 class GraphSeriesSelectionTest extends TestCase
@@ -33,7 +33,7 @@ class GraphSeriesSelectionTest extends TestCase
 
     public function testUnknownSeriesCannotInjectDrawingInstructions(): void
     {
-        $this->expectException(RrdGraphException::class);
+        $this->expectException(InvalidGraphInput::class);
         GraphSeriesSelection::select([], 'device_processor', 'not_a_series');
     }
 }

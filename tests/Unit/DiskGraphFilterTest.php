@@ -2,8 +2,8 @@
 
 namespace LibreNMS\Tests\Unit;
 
-use LibreNMS\Data\Graphing\DiskGraphScope;
-use LibreNMS\Data\Graphing\GraphParameters;
+use App\Data\Graphing\DiskGraphScope;
+use App\Data\Graphing\GraphParameters;
 use LibreNMS\Tests\TestCase;
 
 class DiskGraphFilterTest extends TestCase

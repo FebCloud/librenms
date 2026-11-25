@@ -122,9 +122,9 @@ class SensorThresholdController extends Controller
 
         if ($changesThresholds) {
             $this->validateOrder($sensor);
-            // SensorObserver converts Saving to Yes and preserves these values
-            // during all subsequent discovery runs.
-            $sensor->sensor_custom = 'Saving';
+            // Custom limits are kept by later discovery runs
+            // (Sensor::getSyncProtectedAttributes).
+            $sensor->sensor_custom = 'Yes';
         }
 
         $sensor->save();

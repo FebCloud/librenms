@@ -10,7 +10,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use LibreNMS\Tests\TestCase;
-use LibreNMS\Util\Graph;
 use Spatie\Permission\Models\Role;
 
 class TrafficDirectionApiTest extends TestCase
@@ -26,7 +25,7 @@ class TrafficDirectionApiTest extends TestCase
         Port::factory()->for($device)->create(['ifName' => 'eth0', 'ifDescr' => 'eth0', 'disabled' => 0, 'deleted' => 0]);
         Port::factory()->for($device)->create(['ifName' => 'eth1', 'ifDescr' => 'eth1', 'disabled' => 0, 'deleted' => 0]);
         Rrd::partialMock()->shouldReceive('checkRrdExists')->andReturn(true);
-        $options = Graph::getRrdOptions(['type' => 'device_bits', 'id' => $device->device_id, 'width' => 1100, 'height' => 420, 'traffic_direction' => 'out', 'traffic_same_axis' => 1]);
+        $options = app(\App\Graphs\GraphFactory::class)->graphFor(new \App\Data\Graphing\GraphParameters(['type' => 'device_bits', 'id' => $device->device_id, 'width' => 1100, 'height' => 420, 'traffic_direction' => 'out', 'traffic_same_axis' => 1]))->getRrdCommandOptions();
         $labels = implode("\n", array_filter($options, fn (string $option) => str_starts_with($option, 'HRULE:')));
         $this->assertMatchesRegularExpression('/eth0\s+Out/', $labels);
         $this->assertMatchesRegularExpression('/Total\s+Out/', $labels);
@@ -44,7 +43,7 @@ class TrafficDirectionApiTest extends TestCase
         Rrd::partialMock()->shouldReceive('graph')->times(3)->andReturn('<svg/>');
         foreach (['in', 'out', 'both'] as $direction) {
             $vars = ['type' => 'port_bits', 'id' => $port->port_id, 'traffic_direction' => $direction, 'traffic_same_axis' => 1, 'previous' => 'yes'];
-            $options = Graph::getRrdOptions($vars);
+            $options = app(\App\Graphs\GraphFactory::class)->graphFor(new \App\Data\Graphing\GraphParameters($vars))->getRrdCommandOptions();
             $this->assertContains('CDEF:doutoctets=outoctets,1,*', $options);
             $this->assertContains('CDEF:doutoctetsX=outoctetsX,1,*', $options);
             $commands = implode("\n", $options);

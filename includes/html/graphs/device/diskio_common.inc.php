@@ -3,7 +3,7 @@
 $i = 1;
 
 foreach (dbFetchRows('SELECT * FROM `ucd_diskio` AS U, `devices` AS D WHERE D.device_id = ? AND U.device_id = D.device_id', [$device['device_id']]) as $disk) {
-    if (! \LibreNMS\Data\Graphing\DiskGraphScope::includes($disk['diskio_descr'], $graph_params->diskScope, $graph_params->diskName)) {
+    if (! \App\Data\Graphing\DiskGraphScope::includes($disk['diskio_descr'], $graph_params->diskScope, $graph_params->diskName)) {
         continue;
     }
     $rrd_filename = Rrd::name($disk['hostname'], ['ucd_diskio', $disk['diskio_descr']]);

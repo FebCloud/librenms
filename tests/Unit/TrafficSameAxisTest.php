@@ -13,12 +13,12 @@ class TrafficSameAxisTest extends TestCase
     public function testRequestLayoutDoesNotChangeUserPreferenceOrOtherGraphTypes(): void
     {
         LibrenmsConfig::set('webui.graph_stacked', false);
-        $params = new \LibreNMS\Data\Graphing\GraphParameters(['type' => 'device_bits', 'traffic_same_axis' => '1', 'traffic_direction' => 'out']);
+        $params = new \App\Data\Graphing\GraphParameters(['type' => 'device_bits', 'traffic_same_axis' => '1', 'traffic_direction' => 'out']);
         $this->assertTrue($params->supportsTrafficDirection);
         $this->assertSame('out', $params->trafficDirection);
         $this->assertSame('1', generate_stacked_graphs(false, '88', $params->trafficSameAxis)['stacked']);
         $this->assertSame('-1', generate_stacked_graphs()['stacked']);
-        $other = new \LibreNMS\Data\Graphing\GraphParameters(['type' => 'device_mempool', 'traffic_same_axis' => '1', 'traffic_direction' => 'in']);
+        $other = new \App\Data\Graphing\GraphParameters(['type' => 'device_mempool', 'traffic_same_axis' => '1', 'traffic_direction' => 'in']);
         $this->assertFalse($other->supportsTrafficDirection);
         $this->assertNull($other->trafficSameAxis);
         $this->assertSame('both', $other->trafficDirection);
@@ -58,7 +58,8 @@ class TrafficSameAxisTest extends TestCase
             $user = new User;
             $user->setRelation('preferences', new Collection([new UserPref(['pref' => 'traffic_same_axis', 'value' => $enabled])]));
             $this->actingAs($user);
-            $graph_params = new \LibreNMS\Data\Graphing\GraphParameters(['type' => 'multiport_bits', 'previous' => 'yes']);
+            $params = new \App\Data\Graphing\GraphParameters(['type' => 'multiport_bits', 'previous' => 'yes']);
+            $graph_params = new \App\Data\Graphing\Legacy\LegacyGraphParameters($params);
             $rrd_filenames = ['/tmp/example-port.rrd'];
             $rrd_options = [];
             $ds_in = 'INOCTETS';
@@ -66,9 +67,9 @@ class TrafficSameAxisTest extends TestCase
             $colour_area_in = 'CDEB8B';
             $colour_area_out = 'C3D9FF';
             $float_precision = 2;
-            $from = $graph_params->from;
-            $prev_from = $graph_params->prev_from;
-            $period = $graph_params->period;
+            $from = $params->from;
+            $prev_from = $params->prev_from;
+            $period = $params->period;
             require base_path('includes/html/graphs/generic_multi_data.inc.php');
 
             $direction = $enabled ? 1 : -1;

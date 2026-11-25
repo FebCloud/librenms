@@ -125,6 +125,7 @@ class UserPreferencesController extends Controller implements HasMiddleware
             'temp_units' => 'required|in:default,f',
             'hide_dashboard_editor' => 'required|integer',
             'traffic_same_axis' => 'required|boolean',
+            'network_search_mac_format' => 'required|in:default,colon,dash,dot,bare',
         ];
 
         $this->validate($request, [

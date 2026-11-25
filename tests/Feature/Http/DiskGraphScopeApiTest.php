@@ -10,8 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use LibreNMS\Tests\TestCase;
-use LibreNMS\Data\Graphing\GraphSeriesSelection;
-use LibreNMS\Util\Graph;
+use App\Data\Graphing\GraphSeriesSelection;
 use Spatie\Permission\Models\Role;
 
 class DiskGraphScopeApiTest extends TestCase
@@ -32,10 +31,10 @@ class DiskGraphScopeApiTest extends TestCase
         require_once base_path('includes/html/api_functions.inc.php');
         foreach (['device_diskio_bits', 'device_diskio_ops'] as $type) {
             $vars = ['type' => $type, 'id' => $device->device_id, 'width' => 1100, 'height' => 420];
-            $legacy = implode("\n", Graph::getRrdOptions($vars));
+            $legacy = implode("\n", app(\App\Graphs\GraphFactory::class)->graphFor(new \App\Data\Graphing\GraphParameters($vars))->getRrdCommandOptions());
             $this->assertStringContainsString('nvme0n1p1', $legacy);
             $this->assertStringContainsString('md0', $legacy);
-            $filtered = implode("\n", Graph::getRrdOptions($vars + ['disk_scope' => 'physical']));
+            $filtered = implode("\n", app(\App\Graphs\GraphFactory::class)->graphFor(new \App\Data\Graphing\GraphParameters($vars + ['disk_scope' => 'physical']))->getRrdCommandOptions());
             foreach (['nvme0n1p1', 'sda1', 'md0', 'dm-0', 'bcache0'] as $name) {
                 $this->assertStringNotContainsString($name, $filtered);
             }
@@ -45,11 +44,11 @@ class DiskGraphScopeApiTest extends TestCase
             $this->assertMatchesRegularExpression('/sda\s+Write/', $filtered);
             $response = api_get_graph(Request::create('/graph', 'GET', ['disk_scope' => 'physical']), $vars);
             $this->assertSame('physical', $response->headers->get('X-Disk-Scope'));
-            $options = Graph::getRrdOptions($vars + ['disk_scope' => 'physical']);
+            $options = app(\App\Graphs\GraphFactory::class)->graphFor(new \App\Data\Graphing\GraphParameters($vars + ['disk_scope' => 'physical']))->getRrdCommandOptions();
             $entries = GraphSeriesSelection::entries($options, $type);
             $this->assertCount(4, $entries);
             foreach ($entries as $entry) {
-                $solo = Graph::getRrdOptions($vars + ['disk_scope' => 'physical', 'graph_series' => $entry['key']]);
+                $solo = app(\App\Graphs\GraphFactory::class)->graphFor(new \App\Data\Graphing\GraphParameters($vars + ['disk_scope' => 'physical', 'graph_series' => $entry['key']]))->getRrdCommandOptions();
                 $draws = array_filter($solo, fn ($option) => is_string($option) && preg_match('/^(AREA|LINE[0-9.]*):/', $option));
                 $this->assertCount(1, $draws);
                 $this->assertStringNotContainsString('STACK', implode(' ', $draws));

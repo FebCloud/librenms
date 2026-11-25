@@ -2,7 +2,7 @@
 
 namespace LibreNMS\Tests\Unit;
 
-use LibreNMS\Data\Graphing\TrafficGraphStyle;
+use App\Data\Graphing\TrafficGraphStyle;
 use PHPUnit\Framework\TestCase;
 
 class TrafficGraphStyleTest extends TestCase

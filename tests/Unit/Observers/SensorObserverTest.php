@@ -40,12 +40,12 @@ class SensorObserverTest extends TestCase
 
     public function test_discovery_preserves_user_customized_temperature_limits(): void
     {
+        // since 26.11 discovery skips protected attributes instead of the observer restoring them
         $sensor = $this->sensorWithOriginalLimits(80.0, 50.0, 'Yes');
 
-        $this->observer()->updating($sensor);
-
-        $this->assertSame(80.0, $sensor->sensor_limit);
-        $this->assertSame(50.0, $sensor->sensor_limit_low);
+        $this->assertContains('sensor_limit', $sensor->getSyncProtectedAttributes());
+        $this->assertContains('sensor_limit_low', $sensor->getSyncProtectedAttributes());
+        $this->assertSame([], $this->sensorWithOriginalLimits(80.0, 50.0)->getSyncProtectedAttributes());
     }
 
     private function observer(): SensorObserver

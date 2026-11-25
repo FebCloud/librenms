@@ -2,7 +2,7 @@
 
 namespace LibreNMS\Tests\Unit;
 
-use LibreNMS\Data\Graphing\DiskGraphScope;
+use App\Data\Graphing\DiskGraphScope;
 use PHPUnit\Framework\TestCase;
 
 class DiskGraphScopeTest extends TestCase

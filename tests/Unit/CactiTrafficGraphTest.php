@@ -2,7 +2,7 @@
 
 namespace LibreNMS\Tests\Unit;
 
-use LibreNMS\Data\Graphing\GraphParameters;
+use App\Data\Graphing\GraphParameters;
 use LibreNMS\RRD\RrdProcess;
 use LibreNMS\Tests\TestCase;
 
@@ -10,7 +10,7 @@ class CactiTrafficGraphTest extends TestCase
 {
     private function cactiOptions(array $vars): array
     {
-        $graph_params = new GraphParameters($vars);
+        $graph_params = new \App\Data\Graphing\Legacy\LegacyGraphParameters(new GraphParameters($vars));
         $rrd_list = [
             ['filename' => '/tmp/a.rrd', 'ds_in' => 'INOCTETS', 'ds_out' => 'OUTOCTETS'],
             ['filename' => '/tmp/b.rrd', 'ds_in' => 'INOCTETS', 'ds_out' => 'OUTOCTETS'],
@@ -61,9 +61,9 @@ class CactiTrafficGraphTest extends TestCase
         $this->assertSame('cacti', (new GraphParameters(['type' => 'device_bits', 'traffic_style' => 'cacti']))->trafficStyle);
         $this->assertSame('default', (new GraphParameters(['type' => 'device_mempool', 'traffic_style' => 'cacti']))->trafficStyle);
         $this->assertSame('default', (new GraphParameters(['type' => 'port_bits', 'traffic_style' => 'other']))->trafficStyle);
-        $this->assertSame(11, (new GraphParameters(['type' => 'device_bits', 'width' => 1000, 'font_size' => '11']))->font_size);
-        $this->assertSame(8, (new GraphParameters(['type' => 'device_bits', 'width' => 1000, 'font_size' => '40']))->font_size);
-        $this->assertSame(7, (new GraphParameters(['type' => 'device_bits', 'width' => 200]))->font_size);
+        $this->assertSame(11, (new GraphParameters(['type' => 'device_bits', 'width' => 1000, 'font_size' => '11']))->fontSize);
+        $this->assertNull((new GraphParameters(['type' => 'device_bits', 'width' => 1000, 'font_size' => '40']))->fontSize);
+        $this->assertNull((new GraphParameters(['type' => 'device_bits', 'width' => 200]))->fontSize);
     }
 
     public function testRequestedTimezoneTakesPrecedenceOverTheSessionPreference(): void

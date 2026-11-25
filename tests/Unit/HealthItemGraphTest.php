@@ -2,7 +2,7 @@
 
 namespace LibreNMS\Tests\Unit;
 
-use LibreNMS\Data\Graphing\HealthItemGraph;
+use App\Data\Graphing\HealthItemGraph;
 use LibreNMS\Tests\TestCase;
 
 class HealthItemGraphTest extends TestCase

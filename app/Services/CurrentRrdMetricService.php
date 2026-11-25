@@ -18,7 +18,7 @@ class CurrentRrdMetricService
 
     public function filename(string $hostname, string|array $rrdName): string
     {
-        return $this->rrd->name($hostname, $rrdName);
+        return (string) $this->rrd->name($hostname, $rrdName);
     }
 
     public function latestAverage(string $filename, string $dataset = 'value', ?int $now = null): ?TimeSeriesPoint
@@ -33,13 +33,7 @@ class CurrentRrdMetricService
         $step = (int) LibrenmsConfig::get('rrd.step', 300);
         $maxAge = max($step * 3, 900);
         $start = $now - max($step * 6, 1800);
-        $command = implode(' ', $this->rrd->buildCommand('fetch', $filename, [
-            'AVERAGE',
-            '--start',
-            (string) $start,
-            '--end',
-            (string) $now,
-        ]));
+        $command = implode(' ', ['fetch', $filename, 'AVERAGE', '--start', (string) $start, '--end', (string) $now]);
 
         try {
             $output = $this->rrdProcess->run($command);

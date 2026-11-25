@@ -18,6 +18,9 @@ use LibreNMS\Util\Rewrite;
 use LibreNMS\Util\Url;
 
 $vars['view'] = basename($vars['view'] ?? 'graphs');
+if (! is_file("includes/html/pages/device/port/{$vars['view']}.inc.php")) {
+    $vars['view'] = 'graphs'; // unknown or removed view (e.g. the old events view)
+}
 
 $port = PortCache::get($vars['port']);
 $device = DeviceCache::getPrimary();
@@ -60,7 +63,7 @@ echo "<div style='margin: 0px; width: 100%'><table class='iftable'>";
 echo view('device.tabs.ports.includes.port_row', [
     'port' => $port,
     'data' => [
-        'neighbors' => [$port->port_id => (new \App\Http\Controllers\Device\Tabs\PortsController())->findPortNeighbors($port)],
+        'neighbors' => [$port->port_id => new \App\Http\Controllers\Device\Tabs\PortsController()->findPortNeighbors($port)],
         'neighbor_ports' => null,
         'graphs' => [
             'bits' => [['type' => 'port_bits', 'title' => trans('Traffic'), 'vars' => [['from' => '-1d'], ['from' => '-7d'], ['from' => '-30d'], ['from' => '-1y']]]],
@@ -68,6 +71,7 @@ echo view('device.tabs.ports.includes.port_row', [
             'errors' => [['type' => 'port_errors', 'title' => trans('Errors'), 'vars' => [['from' => '-1d'], ['from' => '-7d'], ['from' => '-30d'], ['from' => '-1y']]]],
         ],
         'tab' => $vars['tab'] ?? 'detail',
+        'ports_with_events' => new \App\Http\Controllers\Device\Tabs\PortsController()->portsWithEvents($device->device_id, [$port->port_id]),
     ],
     'collapsing' => false,
 ]);
@@ -110,7 +114,6 @@ if ($port->nd()->exists()) {
 if ($port->fdbEntries()->exists()) {
     $menu_options['fdb'] = 'FDB Table';
 }
-$menu_options['events'] = 'Eventlog';
 $menu_options['notes'] = ($device->getAttrib('port_id_notes:' . $port->port_id) ?? '') == '' ? 'Notes' : 'Notes*';
 
 if ($port->transceivers()->exists()) {
@@ -163,6 +166,7 @@ foreach ($menu_options as $option => $text) {
     $sep = ' | ';
 }
 
+echo $sep . '<a href="' . route('device.eventlog', ['device' => $device->device_id, 'port' => $port->port_id]) . '">' . __('Eventlog') . '</a>';
 unset($sep);
 
 if (MacAccounting::where('port_id', $port->port_id)->exists()) {
@@ -279,12 +283,12 @@ if (\App\Facades\LibrenmsConfig::get('enable_billing') == 1) {
     if ($port->bills->count() == 1) {
         $bill = $port->bills->first();
         if (Gate::allows('view', $bill)) {
-            echo "<span style='float: right;'><a href='" . Url::generate(['page' => 'bill', 'bill_id' => $bill->bill_id]) . "'><i class='fa fa-money fa-lg icon-theme' aria-hidden='true'></i> View Bill</a></span>";
+            echo "<span style='float: right;'><a href='" . route('bill.show', $bill->bill_id) . "'><i class='fa fa-money fa-lg icon-theme' aria-hidden='true'></i> View Bill</a></span>";
         }
     } elseif ($port->bills->isNotEmpty()) {
-        echo "<span style='float: right;'><a href='" . Url::generate(['page' => 'bills']) . "'><i class='fa fa-money fa-lg icon-theme' aria-hidden='true'></i> View Bills</a></span>";
+        echo "<span style='float: right;'><a href='" . route('bills.index') . "'><i class='fa fa-money fa-lg icon-theme' aria-hidden='true'></i> View Bills</a></span>";
     } elseif (Gate::allows('create', Bill::class)) {
-        echo "<span style='float: right;'><a href='" . Url::generate(['page' => 'bills', 'view' => 'add', 'port' => $port->port_id]) . "'><i class='fa fa-money fa-lg icon-theme' aria-hidden='true'></i> Create Bill</a></span>";
+        echo "<span style='float: right;'><a href='" . route('bills.index', ['port' => $port->port_id]) . "'><i class='fa fa-money fa-lg icon-theme' aria-hidden='true'></i> Create Bill</a></span>";
     }
 }
 
