@@ -2150,7 +2150,8 @@ function add_edit_rule(Illuminate\Http\Request $request)
  * Sets how often a rule's problem notifications repeat: `max_notifications`
  * caps how many times each problem segment fires (null = while the alert is
  * active, 1 = once) and `step_duration_seconds` is the gap between them
- * (0 = the operation's default). An operation shared with other rules is
+ * (0 = the operation's default), and the optional `delay_seconds` is how
+ * long the condition must hold before the first one. An operation shared with other rules is
  * copied for this rule first, so their timing is left unchanged.
  *
  * @param  array<string, mixed>  $timing
@@ -2172,8 +2173,16 @@ function api_set_rule_operation_timing(int $ruleId, array $timing): void
         throw new \InvalidArgumentException('step_duration_seconds must be 0 or more.');
     }
     $step = (int) $timing['step_duration_seconds'];
+    // Optional: how long the condition must hold before the first notification.
+    $delay = null;
+    if (array_key_exists('delay_seconds', $timing)) {
+        if (! is_numeric($timing['delay_seconds']) || (int) $timing['delay_seconds'] < 0 || (int) $timing['delay_seconds'] > 86400) {
+            throw new \InvalidArgumentException('delay_seconds must be between 0 and 86400.');
+        }
+        $delay = (int) $timing['delay_seconds'];
+    }
 
-    \Illuminate\Support\Facades\DB::transaction(function () use ($rule, $max, $step): void {
+    \Illuminate\Support\Facades\DB::transaction(function () use ($rule, $max, $step, $delay): void {
         $operation = \App\Models\AlertOperation::with('segments')->findOrFail($rule->alert_operation_id);
         $shared = \App\Models\AlertRule::query()->where('alert_operation_id', $operation->id)->whereKeyNot($rule->id)->exists();
         if ($shared) {
@@ -2185,6 +2194,9 @@ function api_set_rule_operation_timing(int $ruleId, array $timing): void
         foreach ($operation->segments()->where('operation_phase', 'problem')->get() as $segment) {
             $segment->escalation_step_to = $max === null ? null : $segment->escalation_step_from + (int) $max - 1;
             $segment->step_duration_seconds = $step;
+            if ($delay !== null) {
+                $segment->start_in_seconds = $delay;
+            }
             $segment->save();
         }
     });
