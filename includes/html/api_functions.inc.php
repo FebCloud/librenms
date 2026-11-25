@@ -2152,15 +2152,16 @@ function add_edit_rule(Illuminate\Http\Request $request)
  * active, 1 = once) and `step_duration_seconds` is the gap between them
  * (0 = the operation's default), and the optional `delay_seconds` is how
  * long the condition must hold before the first one. An operation shared with other rules is
- * copied for this rule first, so their timing is left unchanged.
+ * copied for this rule first, so their timing is left unchanged. A rule without an operation
+ * gets one with no channels, which keeps the timing until a channel is attached.
  *
  * @param  array<string, mixed>  $timing
  */
 function api_set_rule_operation_timing(int $ruleId, array $timing): void
 {
     $rule = \App\Models\AlertRule::find($ruleId);
-    if (! $rule || ! $rule->alert_operation_id) {
-        throw new \InvalidArgumentException('The rule has no alert operation to time.');
+    if (! $rule) {
+        throw new \InvalidArgumentException('The rule does not exist.');
     }
     if (! array_key_exists('max_notifications', $timing) || ! array_key_exists('step_duration_seconds', $timing)) {
         throw new \InvalidArgumentException('operation_timing needs max_notifications and step_duration_seconds.');
@@ -2183,6 +2184,26 @@ function api_set_rule_operation_timing(int $ruleId, array $timing): void
     }
 
     \Illuminate\Support\Facades\DB::transaction(function () use ($rule, $max, $step, $delay): void {
+        if (! $rule->alert_operation_id || ! \App\Models\AlertOperation::whereKey($rule->alert_operation_id)->exists()) {
+            // FebNMS: keep the timing on a rule without notifications. The new
+            // operation notifies no one until a channel is attached to it.
+            $operation = \App\Models\AlertOperation::create([
+                'name' => mb_substr(trim($rule->name) !== '' ? $rule->name : 'Rule #' . $rule->id, 0, 200) . ' — API',
+                'notifications_suppressed' => false,
+            ]);
+            foreach (['problem', 'recovery'] as $position => $phase) {
+                $operation->segments()->create([
+                    'position' => $position,
+                    'operation_phase' => $phase,
+                    'escalation_step_from' => 1,
+                    'escalation_step_to' => null,
+                    'start_in_seconds' => 0,
+                    'step_duration_seconds' => 0,
+                ]);
+            }
+            $rule->alert_operation_id = $operation->id;
+            $rule->save();
+        }
         $operation = \App\Models\AlertOperation::with('segments')->findOrFail($rule->alert_operation_id);
         $shared = \App\Models\AlertRule::query()->where('alert_operation_id', $operation->id)->whereKeyNot($rule->id)->exists();
         if ($shared) {
