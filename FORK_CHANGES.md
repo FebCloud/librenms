@@ -56,6 +56,22 @@ transport on every segment of an operation. The FebNMS app uses them to
 register its push webhook on a server without any manual configuration.
 Documented in [`doc/API/Alerts.md`](doc/API/Alerts.md).
 
+## Port traffic baselines
+
+`lnms maintenance:port-traffic-baselines` runs hourly from the scheduler and
+stores, per port, the median of the port's average in/out rate in the same
+hour over the past 7 days (read from the 30-minute RRA of the port RRD) in
+`port_traffic_baselines`. Ports with fewer than 3 days of data get no
+baseline. The alert macros `port_in_drop_perc` / `port_out_drop_perc`
+(percent below usual) and `port_in_baseline` / `port_out_baseline` read it,
+so a rule can alert on a sudden traffic drop without false alarms from the
+normal daily cycle. A row is used only until the hour after it was written,
+so a stopped scheduler makes the macros read 0 instead of a stale baseline.
+
+`GET /api/v0/system` adds `febnms_features: ["port_traffic_baseline"]` so the
+FebNMS app's AI rule assistant only offers these macros on servers that have
+them.
+
 ## Container image for FebNMS users
 
 [`docker/febnms/`](docker/febnms/) builds on the official `librenms/librenms`

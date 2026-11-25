@@ -328,6 +328,13 @@ return [
         'error' => 'Error processing Mac OUI:',
         'vendor_update' => 'Adding OUI :oui for :vendor',
     ],
+    'maintenance:port-traffic-baselines' => [
+        'description' => 'Refresh each port\'s usual traffic for the current hour (used by the port baseline alert macros)',
+        'options' => [
+            'device' => 'Only ports of this hostname or device id',
+        ],
+        'saved' => 'Saved :count port baselines',
+    ],
     'maintenance:rrd-step' => [
         'description' => 'Convert RRD files to match configured step and heartbeat',
         'arguments' => [

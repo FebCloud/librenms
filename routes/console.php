@@ -5,6 +5,7 @@ use App\Console\Commands\MaintenanceCleanupSyslog;
 use App\Console\Commands\MaintenanceDiscoverSslCertificates;
 use App\Console\Commands\MaintenanceFetchOuis;
 use App\Console\Commands\MaintenanceFetchRSS;
+use App\Console\Commands\MaintenancePortTrafficBaselines;
 use App\Console\Commands\MaintenanceRefreshSslCertificates;
 use App\Facades\LibrenmsConfig;
 use App\Jobs\PingCheck;
@@ -198,6 +199,15 @@ Schedule::command(MaintenanceFetchRSS::class)
     ->onOneServer()
     ->appendOutputTo($maintenance_log_file)
     ->onFailure(fn () => Eventlog::log('The scheduled command maintenance:fetch-rss failed to run. Check the maintenance.log for details.', null, 'maintenance', Severity::Error));
+
+// FebNMS: usual traffic per port for the hour, read by the port_*_drop_perc alert macros
+Schedule::command(MaintenancePortTrafficBaselines::class)
+    ->hourlyAt(1)
+    ->onOneServer()
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->appendOutputTo($maintenance_log_file)
+    ->onFailure(fn () => Eventlog::log('The scheduled command maintenance:port-traffic-baselines failed to run. Check the maintenance.log for details.', null, 'maintenance', Severity::Error));
 
 Schedule::command(MaintenanceCleanupSyslog::class)
     ->hourlyAt(17)
