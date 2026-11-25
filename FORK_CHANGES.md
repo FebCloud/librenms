@@ -88,11 +88,12 @@ the port baselines. `febnms_features` adds `device_metric_baseline`.
 ## Container image for FebNMS users
 
 [`docker/febnms/`](docker/febnms/) builds on the official `librenms/librenms`
-image and applies the upstream pull requests the FebNMS app uses that are not
-merged yet: #20760 (device live metrics, with a fix for the 26.11 RRD backend)
-and #20356 (port speed override). The `FebNMS image` workflow publishes it as
-`ghcr.io/febcloud/febnms-librenms:<LibreNMS version>`. Users swap the image
-name in the official compose file; see [`docker/febnms/README.md`](docker/febnms/README.md).
+image and copies in every file this fork changed against that release
+(`build-context.sh` collects them), so the published image matches what
+FebNMS runs on its own servers. The `FebNMS image` workflow publishes it as
+`ghcr.io/febcloud/febnms-librenms:<LibreNMS version>` (plus
+`<version>-<fork revision>` and `latest`). Users swap the image name in the
+official compose file; see [`docker/febnms/README.md`](docker/febnms/README.md).
 
 ## Verification
 
