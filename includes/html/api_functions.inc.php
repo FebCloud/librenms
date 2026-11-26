@@ -1772,6 +1772,8 @@ function list_alerts(Illuminate\Http\Request $request): JsonResponse
     $severity = $request->input('severity');
     $alert_rule = $request->input('alert_rule');
     $limit = filter_var($request->input('limit'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    $offset = filter_var($request->input('offset'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    $brief = $request->input('details') === 'brief';
     $sort_column = 'timestamp';
     $sort_order = 'desc';
 
@@ -1785,7 +1787,7 @@ function list_alerts(Illuminate\Http\Request $request): JsonResponse
     }
 
     $alerts = AlertFault::query()
-        ->select(['devices.hostname', 'alert_faults.*', 'alert_rules.severity', 'alert_rules.name', 'alert_rules.proc', 'alert_rules.notes'])
+        ->select(['devices.hostname', 'alert_faults.*', 'alert_rules.severity', 'alert_rules.name', 'alert_rules.proc', 'alert_rules.notes', 'alert_rules.builder'])
         ->join('devices', 'alert_faults.device_id', 'devices.device_id')
         ->join('alert_rules', 'alert_faults.rule_id', 'alert_rules.id')
         ->when(Gate::denies('viewAll', Alert::class), fn ($query) => $query->hasAccess($request->user()))
@@ -1794,13 +1796,75 @@ function list_alerts(Illuminate\Http\Request $request): JsonResponse
         ->when(in_array($severity, ['ok', 'warning', 'critical']), fn ($query) => $query->where('alert_rules.severity', $severity))
         ->when(is_numeric($alert_rule), fn ($query) => $query->where('alert_rules.id', $alert_rule))
         ->orderBy("alert_faults.$sort_column", $sort_order)
+        ->orderBy('alert_faults.id', $sort_order)
         ->when($limit !== false, fn ($query) => $query->limit($limit))
+        ->when($limit !== false && $offset !== false, fn ($query) => $query->offset($offset))
         ->toBase()->get()
-        ->each(function ($alert): void {
+        ->each(function ($alert) use ($brief): void {
             $alert->details = CompressedJson::decode($alert->details);
+            if ($brief) {
+                $alert->details = api_brief_alert_details($alert->details, $alert->builder);
+            }
+            unset($alert->builder);
         })->all();
 
     return api_success($alerts, 'alerts');
+}
+
+/**
+ * The part of an alert's details a list needs: each matched row keeps the
+ * columns its rule tests, the macro values, ids, and the names and values
+ * that say what matched. The rest of the row (device notes, sysDescr,
+ * every port counter) can be tens of kilobytes per alert.
+ */
+function api_brief_alert_details(mixed $details, ?string $builder): mixed
+{
+    if (! is_array($details) || ! is_array($details['rule'] ?? null)) {
+        return $details;
+    }
+
+    $keep = array_fill_keys([
+        'hostname', 'sysName', 'display', 'status', 'status_reason',
+        'sensor_descr', 'sensor_class', 'sensor_current', 'sensor_limit', 'sensor_limit_low', 'sensor_limit_warn', 'sensor_limit_low_warn',
+        'storage_descr', 'storage_perc', 'storage_perc_warn',
+        'processor_descr', 'processor_usage', 'processor_perc_warn',
+        'mempool_descr', 'mempool_perc', 'mempool_perc_warn',
+        'ifName', 'ifDescr', 'ifAlias', 'ifOperStatus', 'ifAdminStatus', 'ifSpeed', 'ifInOctets_rate', 'ifOutOctets_rate',
+        'service_name', 'service_type', 'service_desc', 'service_message', 'service_status',
+    ], true);
+    $fields = [];
+    $collect = function ($node) use (&$collect, &$fields): void {
+        if (! is_array($node)) {
+            return;
+        }
+        if (is_string($node['field'] ?? null)) {
+            $fields[] = $node['field'];
+        }
+        foreach ($node['rules'] ?? [] as $child) {
+            $collect($child);
+        }
+    };
+    $collect(json_decode((string) $builder, true));
+    foreach ($fields as $field) {
+        $keep[$field] = true;
+        $keep[str_contains($field, '.') ? substr($field, strrpos($field, '.') + 1) : $field] = true;
+    }
+
+    $rows = [];
+    foreach ($details['rule'] as $row) {
+        if (! is_array($row)) {
+            continue;
+        }
+        $brief = [];
+        foreach ($row as $key => $value) {
+            if (isset($keep[$key]) || str_starts_with((string) $key, 'macros.') || str_ends_with((string) $key, '_id')) {
+                $brief[$key] = is_string($value) && strlen($value) > 500 ? mb_strcut($value, 0, 500) : $value;
+            }
+        }
+        $rows[] = $brief;
+    }
+
+    return ['rule' => $rows];
 }
 
 function api_parse_transport_targets(array $transports): array

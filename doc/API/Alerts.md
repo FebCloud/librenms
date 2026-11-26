@@ -118,6 +118,12 @@ Input:
   (descending). Can be appended by DESC or ASC to change the order.
 - limit: Return at most this many alerts (a positive integer), after ordering.
   For example `state=0&limit=10` returns the ten most recent recoveries.
+- offset: With `limit`, skip this many alerts first (for paging:
+  `state=0&limit=10&offset=10` is the second page).
+- details: `brief` trims each matched row in `details.rule` to the columns
+  the rule tests, macro values, ids and the names and values of what
+  matched, and leaves out `details.contacts`. Without it the full rows are
+  returned.
 
 Examples:
 
