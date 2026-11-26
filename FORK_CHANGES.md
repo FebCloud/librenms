@@ -85,6 +85,15 @@ read it, so a rule can alert on a sudden rise in CPU or memory usage without
 false alarms from jobs that run at the same time every day. Rows expire like
 the port baselines. `febnms_features` adds `device_metric_baseline`.
 
+## Values that triggered an alert
+
+Builder rules select each macro their conditions use as an extra column named
+after it (`... AS \`macros.port_out_drop_perc\``), so every fault row, and the
+alert log entry written when it fires, records the value the rule saw. The
+FebNMS app shows these values with the rule's thresholds under "Why it fired".
+A migration rebuilds the saved query of existing builder rules; rules with a
+hand-written query are unchanged.
+
 ## Container image for FebNMS users
 
 [`docker/febnms/`](docker/febnms/) builds on the official `librenms/librenms`

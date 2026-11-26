@@ -155,7 +155,13 @@ class QueryBuilderParser implements \JsonSerializable
         $wrap = false;
 
         if ($expand) {
-            $sql = 'SELECT * FROM ' . implode(',', $this->getTables());
+            // FebNMS: also select each macro the conditions use, so a fault records the
+            // values that triggered it (e.g. `macros.port_out_drop_perc`).
+            $selects = ['*'];
+            foreach ($this->macroFields($this->builder) as $macro) {
+                $selects[] = $this->expandMacro($macro) . " AS `$macro`";
+            }
+            $sql = 'SELECT ' . implode(', ', $selects) . ' FROM ' . implode(',', $this->getTables());
             $sql .= ' WHERE (' . implode(' AND ', $this->generateGlue()) . ') AND ';
 
             // only wrap in ( ) if the condition is OR and there is more than one rule
@@ -163,6 +169,25 @@ class QueryBuilderParser implements \JsonSerializable
         }
 
         return $sql . $this->parseGroup($this->builder, $expand, $wrap);
+    }
+
+    /**
+     * The macros used as condition fields, in order and without repeats.
+     *
+     * @return list<string>
+     */
+    private function macroFields(array $group): array
+    {
+        $fields = [];
+        foreach ($group['rules'] ?? [] as $rule) {
+            if (array_key_exists('condition', $rule)) {
+                $fields = array_merge($fields, $this->macroFields($rule));
+            } elseif (is_string($rule['field'] ?? null) && preg_match('/^macros\.[A-Za-z0-9_]+$/', $rule['field'])) {
+                $fields[] = $rule['field'];
+            }
+        }
+
+        return array_values(array_unique($fields));
     }
 
     /**
