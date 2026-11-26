@@ -1771,6 +1771,7 @@ function list_alerts(Illuminate\Http\Request $request): JsonResponse
     $id = $request->route('id');
     $severity = $request->input('severity');
     $alert_rule = $request->input('alert_rule');
+    $limit = filter_var($request->input('limit'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
     $sort_column = 'timestamp';
     $sort_order = 'desc';
 
@@ -1793,6 +1794,7 @@ function list_alerts(Illuminate\Http\Request $request): JsonResponse
         ->when(in_array($severity, ['ok', 'warning', 'critical']), fn ($query) => $query->where('alert_rules.severity', $severity))
         ->when(is_numeric($alert_rule), fn ($query) => $query->where('alert_rules.id', $alert_rule))
         ->orderBy("alert_faults.$sort_column", $sort_order)
+        ->when($limit !== false, fn ($query) => $query->limit($limit))
         ->toBase()->get()
         ->each(function ($alert): void {
             $alert->details = CompressedJson::decode($alert->details);

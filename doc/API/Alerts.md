@@ -116,6 +116,8 @@ Input:
 - alert_rule: Filter alerts by alert rule ID.
 - order: How to order the output, default is by timestamp
   (descending). Can be appended by DESC or ASC to change the order.
+- limit: Return at most this many alerts (a positive integer), after ordering.
+  For example `state=0&limit=10` returns the ten most recent recoveries.
 
 Examples:
 
